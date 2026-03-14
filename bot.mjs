@@ -1,5 +1,6 @@
 //Launch in terminal with:
-//node --env-file=_SECRETS/.env bot.mjs
+//npx nodemon --env-file=_SECRETS/.env bot.mjs
+//(nodemon will relaunch any time there are code changes)
 
 import {Client, GatewayDispatchEvents} from '@discordjs/core';
 import {REST} from '@discordjs/rest';
@@ -21,24 +22,33 @@ const gateway = new WebSocketManager({
 
 const client = new Client({rest, gateway});
 
+//When any message is sent in a channel this bot can see
 client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
-  if (data.author.bot) {
-    return;
-  }
+    //Ignore messages this bot sent
+    if (data.author.bot) {
+        return;
+    }
 
-  //If a message contains !ping
-  if (data.content === '.ping') {
-    await api.channels.createMessage(data.channel_id, {
-      content: 'pong!',
-      message_reference: {message_id: data.id},
-    });
+    //If a message contains !ping
+    if (data.content === '.ping') {
+        //Reply
+        await api.channels.createMessage(data.channel_id, {
+            content: 'Pong 2!',
+            message_reference: {message_id: data.id},
+        });
 
-    await api.channels.createReaction(
-      data.channel_id,
-      data.id,
-      '👍'
-    );
-  }
+        try {
+            //Add a reaction
+            await rest.put(
+                `/channels/${data.channel_id}`
+                + `/messages/${data.id}`
+                + `/reactions/${encodeURIComponent('👍')}`
+                + `/@me`
+            );
+        } catch (err) {
+            console.error('Reaction failed:', err);
+        }
+    }
 });
 
 //Log in
@@ -48,3 +58,19 @@ client.on(GatewayDispatchEvents.Ready, ({data}) => {
 });
 
 gateway.connect();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
