@@ -53,10 +53,18 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
                 body: { recipient_id: data.author.id },
             });
 
-            // Send message to that DM
+            //Send message to that DM
             await api.channels.createMessage(dm.id, {
                 content: `Got your command!`,
             });
+
+            ////Send message to a specific channel
+            //const channelID = '1482323208798560606';
+            //messageID = await api.channels.createMessage(channelID, {
+            //    content: `Welcome to ScaleShift's community server for silly furry fluffs and everyone in between! Come hangout with us, make friends, game together, and get notifs on my videos and livestreams :)
+            //    \nBefore you can access the server, we have a brief setup process. React to this message to get started.
+            //    \nIf you have any trouble, please DM <@1475197769988640991> directly - he's nice!`,
+            //});
         } catch (err) {
             console.error('DM failed:', err);
         }
@@ -74,6 +82,84 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
         //}
     }
 });
+
+//Reactions to the server setup start message
+const messageID = '1482494874988936574';
+client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
+    if (messageID === null) {
+        return;
+    }
+
+    if (data.message_id !== messageID) {
+        return;
+    }
+
+    //DM the reacting user
+    try {
+        //Get DM channel
+        const dm = await rest.post('/users/@me/channels', {
+            body: { recipient_id: data.user_id },
+        });
+
+        //Send DM
+        const messageAgeVerification = await api.channels.createMessage(dm.id, { content:
+`Welcome!
+\nPlease select your age by selecting the corresponding reaction below.
+1️⃣<13
+2️⃣ 13-14
+3️⃣ 15-17
+4️⃣ 18-22
+5️⃣ 23+
+\nNote that you CANNOT change this later so be honest!`,
+        });
+
+        //React to own message
+        try {
+            await rest.put(
+                `/channels/${messageAgeVerification.channel_id}`
+                + `/messages/${messageAgeVerification.id}`
+                + `/reactions/${encodeURIComponent('1️⃣')}`
+                + `/@me`
+            );
+
+            await rest.put(
+                `/channels/${messageAgeVerification.channel_id}`
+                + `/messages/${messageAgeVerification.id}`
+                + `/reactions/${encodeURIComponent('2️⃣')}`
+                + `/@me`
+            );
+
+            await rest.put(
+                `/channels/${messageAgeVerification.channel_id}`
+                + `/messages/${messageAgeVerification.id}`
+                + `/reactions/${encodeURIComponent('3️⃣')}`
+                + `/@me`
+            );
+
+            await rest.put(
+                `/channels/${messageAgeVerification.channel_id}`
+                + `/messages/${messageAgeVerification.id}`
+                + `/reactions/${encodeURIComponent('4️⃣')}`
+                + `/@me`
+            );
+
+            await rest.put(
+                `/channels/${messageAgeVerification.channel_id}`
+                + `/messages/${messageAgeVerification.id}`
+                + `/reactions/${encodeURIComponent('5️⃣')}`
+                + `/@me`
+            );
+        } catch (err) {
+            console.error('Reaction failed:', err);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+
+});
+
+//Reactions to individual DMs
+
 
 //Log in
 client.on(GatewayDispatchEvents.Ready, ({data}) => {
