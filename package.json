@@ -1,0 +1,29 @@
+{
+  "name": "fluxer-perma-roles",
+  "version": "1.0.0",
+  "description": "A Fluxer bot which lets you apply Fluxer Roles which remain attached to users even after leaving and rejoining the server. Highly useful for moderation.",
+  "keywords": [
+    "fluxer",
+    "bot",
+    "roles",
+    "perma"
+  ],
+  "homepage": "https://github.com/ScaleShiftX/fluxer-perma-roles#readme",
+  "bugs": {
+    "url": "https://github.com/ScaleShiftX/fluxer-perma-roles/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ScaleShiftX/fluxer-perma-roles.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "ScaleShift",
+  "type": "module",
+  "main": "bot.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@discordjs/core": "^2.4.0"
+  }
+}
