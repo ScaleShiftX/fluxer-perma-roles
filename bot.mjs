@@ -2,6 +2,10 @@
 //npx nodemon --env-file=_SECRETS/.env bot.mjs
 //(nodemon will relaunch any time there are code changes)
 
+//1. Write a message
+//2. Copy message link of that message
+//3. Write `.role [message link]`
+
 import {Client, GatewayDispatchEvents} from '@discordjs/core';
 import {REST} from '@discordjs/rest';
 import {WebSocketManager} from '@discordjs/ws';
@@ -30,18 +34,23 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
     }
 
     //If a message contains !ping
-    if (data.content === '.ping') {
+    const role_command = '.role ';
+    if (data.content.startsWith(role_command)) {
         //Reply
         await api.channels.createMessage(data.channel_id, {
-            content: 'Pong 2!',
+            content: 'Attempting to add reaction role...',
             message_reference: {message_id: data.id},
         });
+
+        //Slice off the characters of the command name
+        const args = data.content.slice(role_command.length + 'https://fluxer.app/channels/'.length).split('/');
+        console.log(args);
 
         try {
             //Add a reaction
             await rest.put(
-                `/channels/${data.channel_id}`
-                + `/messages/${data.id}`
+                `/channels/${args[1]}`
+                + `/messages/${args[2]}`
                 + `/reactions/${encodeURIComponent('👍')}`
                 + `/@me`
             );
