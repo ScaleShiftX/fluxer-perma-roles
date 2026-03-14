@@ -42,21 +42,36 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
             message_reference: {message_id: data.id},
         });
 
-        //Slice off the characters of the command name
-        const args = data.content.slice(role_command.length + 'https://fluxer.app/channels/'.length).split('/');
-        console.log(args);
+        ////Slice off the characters of the command name
+        //const args = data.content.slice(role_command.length + 'https://fluxer.app/channels/'.length).split('/');
+        //console.log(args);
 
+        //DM the user
         try {
-            //Add a reaction
-            await rest.put(
-                `/channels/${args[1]}`
-                + `/messages/${args[2]}`
-                + `/reactions/${encodeURIComponent('👍')}`
-                + `/@me`
-            );
+            //Get DM channel
+            const dm = await rest.post('/users/@me/channels', {
+                body: { recipient_id: data.author.id },
+            });
+
+            // Send message to that DM
+            await api.channels.createMessage(dm.id, {
+                content: `Got your command!`,
+            });
         } catch (err) {
-            console.error('Reaction failed:', err);
+            console.error('DM failed:', err);
         }
+
+        //try {
+        //    //Add a reaction
+        //    await rest.put(
+        //        `/channels/${args[1]}`
+        //        + `/messages/${args[2]}`
+        //        + `/reactions/${encodeURIComponent('👍')}`
+        //        + `/@me`
+        //    );
+        //} catch (err) {
+        //    console.error('Reaction failed:', err);
+        //}
     }
 });
 
