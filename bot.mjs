@@ -2,6 +2,9 @@
 //npx nodemon --env-file=_SECRETS/.env bot.mjs
 //(nodemon will relaunch any time there are code changes)
 
+//Or launch without nodemon with:
+//node --env-file=_SECRETS/.env bot.mjs
+
 //1. Write a message
 //2. Copy message link of that message
 //3. Write `.role [message link]`
@@ -163,6 +166,59 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
     //Apply the appropriate role
     console.log('Applying role');
     applyRole(guild_id, { rest }, ageGroup, data.user_id);
+});
+
+//Remove a user from the database (mostly for diagnostics)
+client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
+    //Ignore messages this bot sent
+    if (data.author.bot) {
+        return;
+    }
+
+    //If a message contains the command
+    const role_command = '.remove ';
+    if (data.content.startsWith(role_command)) {
+        //Only allow admins to run this command
+        if (data.user_id !== '1475197769988640991') { //ScaleShift's user ID, hardcoded
+            await api.channels.createMessage(data.channel_id, {
+                content: 'This command is only available to admins.',
+                message_reference: {message_id: data.id},
+            });
+
+            return;
+        }
+
+        //Slice off the characters after the command name
+        const userId = data.content.split(role_command.length)[1];
+
+        //Begin
+        await api.channels.createMessage(data.channel_id, {
+            content: 'Attempting to remove user ID ' + userId + ' from the database...',
+            message_reference: {message_id: data.id},
+        });
+
+        try {
+            //Delete user from table
+            const result = db.prepare(`
+                DELETE FROM age_verification
+                WHERE user_id = ?
+            `).run(userId);
+
+            //Success
+            if (result.changes >= 1){
+                await api.channels.createMessage(data.channel_id, {
+                    content: 'SUCCESSFULLY removed ' + userId + ' from the database!',
+                    message_reference: {message_id: data.id},
+                });
+            }
+        } catch (error) {
+            //Failure
+            await api.channels.createMessage(data.channel_id, {
+                content: 'FAILED to remove user ID ' + userId + ' from the database!',
+                message_reference: {message_id: data.id},
+            });
+        }
+    }
 });
 
 //Log in
