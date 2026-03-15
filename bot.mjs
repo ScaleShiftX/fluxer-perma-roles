@@ -216,6 +216,13 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
                     message_reference: {message_id: data.id},
                 });
             }
+            else {
+                console.log('No rows were changed - user ID ' + userId + ' might not exist in the database');
+                await api.channels.createMessage(data.channel_id, {
+                    content: 'No rows were changed - user ID ' + userId + ' might not exist in the database',
+                    message_reference: {message_id: data.id},
+                });
+            }
         } catch (error) {
             //Failure
             console.log('FAILED to remove user ID ' + userId + ' from the database!');
