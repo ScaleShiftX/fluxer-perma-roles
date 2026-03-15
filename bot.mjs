@@ -9,7 +9,9 @@
 import {Client, GatewayDispatchEvents} from '@discordjs/core';
 import {REST} from '@discordjs/rest';
 import {WebSocketManager} from '@discordjs/ws';
+import Database from "better-sqlite3";
 
+//Setup
 const token = process.env['FLUXER_BOT_TOKEN'];
 if (!token) {
   throw new Error('You forgot the token!');
@@ -26,71 +28,26 @@ const gateway = new WebSocketManager({
 
 const client = new Client({rest, gateway});
 
-//When any message is sent in a channel this bot can see
-client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
-    //Ignore messages this bot sent
-    if (data.author.bot) {
-        return;
-    }
+//Database setup
+const db = new Database("roles.db");
 
-    //If a message contains !ping
-    const role_command = '.role ';
-    if (data.content.startsWith(role_command)) {
-        //Reply
-        await api.channels.createMessage(data.channel_id, {
-            content: 'Attempting to add reaction role...',
-            message_reference: {message_id: data.id},
-        });
-
-        ////Slice off the characters of the command name
-        //const args = data.content.slice(role_command.length + 'https://fluxer.app/channels/'.length).split('/');
-        //console.log(args);
-
-        //DM the user
-        try {
-            //Get DM channel
-            const dm = await rest.post('/users/@me/channels', {
-                body: { recipient_id: data.author.id },
-            });
-
-            //Send message to that DM
-            await api.channels.createMessage(dm.id, {
-                content: `Got your command!`,
-            });
-
-            ////Send message to a specific channel
-            //const channelID = '1482323208798560606';
-            //messageID = await api.channels.createMessage(channelID, {
-            //    content: `Welcome to ScaleShift's community server for silly furry fluffs and everyone in between! Come hangout with us, make friends, game together, and get notifs on my videos and livestreams :)
-            //    \nBefore you can access the server, we have a brief setup process. React to this message to get started.
-            //    \nIf you have any trouble, please DM <@1475197769988640991> directly - he's nice!`,
-            //});
-        } catch (err) {
-            console.error('DM failed:', err);
-        }
-
-        //try {
-        //    //Add a reaction
-        //    await rest.put(
-        //        `/channels/${args[1]}`
-        //        + `/messages/${args[2]}`
-        //        + `/reactions/${encodeURIComponent('👍')}`
-        //        + `/@me`
-        //    );
-        //} catch (err) {
-        //    console.error('Reaction failed:', err);
-        //}
-    }
-});
+db.exec(`
+    CREATE TABLE IF NOT EXISTS age_verification (
+        age_verification_message_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        age_group_reported TEXT NOT NULL,
+        reaction_timestamp INTEGER NOT NULL
+    )
+`);
 
 //Reactions to the server setup start message
-const messageID = '1482494874988936574';
+const messageSetup = '1482494874988936574';
 client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
-    if (messageID === null) {
+    if (messageSetup === null) {
         return;
     }
 
-    if (data.message_id !== messageID) {
+    if (data.message_id !== messageSetup) {
         return;
     }
 
@@ -103,7 +60,7 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
 
         //Send DM
         const messageAgeVerification = await api.channels.createMessage(dm.id, { content:
-`Welcome!
+`Welcome! Let's get you set up to join ScaleShift's server.
 \nPlease select your age by selecting the corresponding reaction below.
 1️⃣<13
 2️⃣ 13-14
@@ -152,35 +109,100 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
         } catch (err) {
             console.error('Reaction failed:', err);
         }
+
+        //Insert new DB row, without user selection for now
+        db.prepare(`
+            INSERT INTO age_verification (
+                age_verification_message_id,
+                user_id,
+                age_group_reported,
+                reaction_timestamp
+            )
+            VALUES (
+                ?,
+                ?,
+                ?,
+                ?
+            )
+        `).run(
+            messageAgeVerification.id,
+            data.user_id,
+            '',
+            0,
+        );
     } catch (err) {
         console.error(err);
     }
-
 });
 
 //Reactions to individual DMs
+client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
+    //Find this message ID in our age_verification database
+    //(if it does not exist, the message being reacted to isn't an age verification DM we sent out)
+    const row = await db.prepare(`
+        SELECT *
+        FROM age_verification
+        WHERE age_verification_message_id = ?
+        AND (age_group_reported = '' OR age_group_reported IS NULL)
+        LIMIT 1
+    `).get(data.message_id);
 
+    if (!row) {
+        return;
+    }
+    else {
+        console.log('age_verification row with matching message_id found; proceeding');
+    }
+
+    console.log("Row found:", row);
+
+    //Prevent sending multiple reactions, so users can't change their minds without admin approval
+    //(For age verification, underage users might decide they want to lie later to access 18+ content)
+    if (row.age_group_reported !== ''){
+        console.log('age_group_reported is not blank; returning');
+        return;
+    }
+    else {
+        console.log('age_group_reported is blank; proceeding');
+    }
+
+    //Insert into DB
+    console.log('Inserting into DB from message_id ' + data.message_id);
+
+    //Map emoji → age group
+    const ageMap = {
+        "1️⃣": "<13",
+        "2️⃣": "13-14",
+        "3️⃣": "15-17",
+        "4️⃣": "18-22",
+        "5️⃣": "23+"
+    };
+
+    const ageGroup = ageMap[data.emoji.name];
+    if (!ageGroup) {
+        console.log('Error parsing ageGroup from reaction');
+        return;
+    }
+
+    //Update database row with user-reported age and the time it is reported
+    db.prepare(`
+        UPDATE age_verification
+        SET age_group_reported = ?,
+        reaction_timestamp = ?
+        WHERE age_verification_message_id = ?
+    `).run(
+        ageGroup,
+        Date.now(),
+        data.message_id
+    );
+
+    console.log('Updated DB');
+});
 
 //Log in
 client.on(GatewayDispatchEvents.Ready, ({data}) => {
-  const {username, discriminator} = data.user;
-  console.log(`Logged in as @${username}#${discriminator}`);
+    const {username, discriminator} = data.user;
+    console.log(`Logged in as @${username}#${discriminator}`);
 });
 
 gateway.connect();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
