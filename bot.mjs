@@ -178,8 +178,10 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
     //If a message contains the command
     const role_command = '.remove ';
     if (data.content.startsWith(role_command)) {
+        //console.log('data', data);
+        console.log('Running ' + role_command + 'at ' + new Date().toLocaleString("en-CA", { timeZone: "America/Vancouver" }));
+
         //Only allow admins to run this command
-        console.log('data', data);
         if (data.author.id !== '1475197769988640991') { //ScaleShift's user ID, hardcoded
             await api.channels.createMessage(data.channel_id, {
                 content: 'This command is only available to admins.',
@@ -193,6 +195,7 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
         const userId = data.content.split(role_command.length)[1];
 
         //Begin
+        console.log('Attempting to remove user ID ' + userId + ' from the database...');
         await api.channels.createMessage(data.channel_id, {
             content: 'Attempting to remove user ID ' + userId + ' from the database...',
             message_reference: {message_id: data.id},
@@ -207,6 +210,7 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
 
             //Success
             if (result.changes >= 1){
+                console.log('SUCCESSFULLY removed ' + userId + ' from the database!');
                 await api.channels.createMessage(data.channel_id, {
                     content: 'SUCCESSFULLY removed ' + userId + ' from the database!',
                     message_reference: {message_id: data.id},
@@ -214,11 +218,14 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
             }
         } catch (error) {
             //Failure
+            console.log('FAILED to remove user ID ' + userId + ' from the database!');
             await api.channels.createMessage(data.channel_id, {
                 content: 'FAILED to remove user ID ' + userId + ' from the database!',
                 message_reference: {message_id: data.id},
             });
         }
+
+        console.log('Finished without crashing.');
     }
 });
 
