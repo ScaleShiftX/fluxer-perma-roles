@@ -179,6 +179,7 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
     const role_command = '.remove ';
     if (data.content.startsWith(role_command)) {
         //Only allow admins to run this command
+        console.log('data', data);
         if (author.user_id !== '1475197769988640991') { //ScaleShift's user ID, hardcoded
             await api.channels.createMessage(data.channel_id, {
                 content: 'This command is only available to admins.',
