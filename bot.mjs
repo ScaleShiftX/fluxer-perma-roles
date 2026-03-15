@@ -192,7 +192,7 @@ client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
         }
 
         //Slice off the characters after the command name
-        const userId = data.content.split(role_command.length)[1];
+        const userId = data.content.slice(role_command.length);
 
         //Begin
         console.log('Attempting to remove user ID ' + userId + ' from the database...');
