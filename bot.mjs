@@ -6,12 +6,18 @@
 //2. Copy message link of that message
 //3. Write `.role [message link]`
 
+//To get stuff like role IDs, you need to be in developer mode and right-click on the server, and select debug community
+
 import {Client, GatewayDispatchEvents} from '@discordjs/core';
 import {REST} from '@discordjs/rest';
 import {WebSocketManager} from '@discordjs/ws';
 import Database from "better-sqlite3";
+import dmSetup from './dm_setup.mjs';
+import applyRole from './apply_role.mjs';
 
 //Setup
+const guild_id = '1475505230441079387';
+
 const token = process.env['FLUXER_BOT_TOKEN'];
 if (!token) {
   throw new Error('You forgot the token!');
@@ -40,9 +46,37 @@ db.exec(`
     )
 `);
 
-//Reactions to the server setup start message
-const messageSetup = '1482494874988936574';
+//Send a message to users when they join the server
+client.on(GatewayDispatchEvents.GuildMemberAdd, async ({ api, data }) => {
+    //Apply the user's existing roles if they already exist in the database
+    //Find this user ID in our age_verification database
+    //(if it does not exist, the user has not yet setup)
+    const row = db.prepare(`
+        SELECT age_group_reported
+        FROM age_verification
+        WHERE user_id = ?
+        AND age_group_reported IS NOT NULL
+        AND age_group_reported != ''
+        LIMIT 1
+    `).get(data.user.id);
+
+    if (!row) {
+        console.log('This user has not yet reported an age; proceeding to prompt them to setup in DMs');
+
+        dmSetup({ api, rest, db }, data.user.id);
+    }
+    else {
+        console.log('This user HAS reported an age previously (probably rejoined); re-adding their perma role(s)');
+        console.log("Row found:", row);
+
+        applyRole(guild_id, { rest }, row.age_group_reported, data.user.id);
+    }
+});
+
+//Listen for reactions to the server message asking you to react to start your set up process
+const messageSetup = '1482494874988936574'; //pre-existing message in the server that people can react to
 client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
+    //Only send a DM to someone who has reacted to a valid message
     if (messageSetup === null) {
         return;
     }
@@ -51,92 +85,19 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
         return;
     }
 
-    //DM the reacting user
-    try {
-        //Get DM channel
-        const dm = await rest.post('/users/@me/channels', {
-            body: { recipient_id: data.user_id },
-        });
+    //Don't react to ourselves
+    console.log('data', data);
+    if (data.user_id === process.env.FLUXER_BOT_ID) return; //user ID of the bot, stored in _SECRETS/.env
 
-        //Send DM
-        const messageAgeVerification = await api.channels.createMessage(dm.id, { content:
-`Welcome! Let's get you set up to join ScaleShift's server.
-\nPlease select your age by selecting the corresponding reaction below.
-1️⃣<13
-2️⃣ 13-14
-3️⃣ 15-17
-4️⃣ 18-22
-5️⃣ 23+
-\nNote that you CANNOT change this later so be honest!`,
-        });
-
-        //React to own message
-        try {
-            await rest.put(
-                `/channels/${messageAgeVerification.channel_id}`
-                + `/messages/${messageAgeVerification.id}`
-                + `/reactions/${encodeURIComponent('1️⃣')}`
-                + `/@me`
-            );
-
-            await rest.put(
-                `/channels/${messageAgeVerification.channel_id}`
-                + `/messages/${messageAgeVerification.id}`
-                + `/reactions/${encodeURIComponent('2️⃣')}`
-                + `/@me`
-            );
-
-            await rest.put(
-                `/channels/${messageAgeVerification.channel_id}`
-                + `/messages/${messageAgeVerification.id}`
-                + `/reactions/${encodeURIComponent('3️⃣')}`
-                + `/@me`
-            );
-
-            await rest.put(
-                `/channels/${messageAgeVerification.channel_id}`
-                + `/messages/${messageAgeVerification.id}`
-                + `/reactions/${encodeURIComponent('4️⃣')}`
-                + `/@me`
-            );
-
-            await rest.put(
-                `/channels/${messageAgeVerification.channel_id}`
-                + `/messages/${messageAgeVerification.id}`
-                + `/reactions/${encodeURIComponent('5️⃣')}`
-                + `/@me`
-            );
-        } catch (err) {
-            console.error('Reaction failed:', err);
-        }
-
-        //Insert new DB row, without user selection for now
-        db.prepare(`
-            INSERT INTO age_verification (
-                age_verification_message_id,
-                user_id,
-                age_group_reported,
-                reaction_timestamp
-            )
-            VALUES (
-                ?,
-                ?,
-                ?,
-                ?
-            )
-        `).run(
-            messageAgeVerification.id,
-            data.user_id,
-            '',
-            0,
-        );
-    } catch (err) {
-        console.error(err);
-    }
+    //DM users who react to the valid message
+    dmSetup({ api, rest, db }, data.user_id);
 });
 
-//Reactions to individual DMs
+//Listen for reactions to the setup DM
 client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
+    //Don't react to ourselves
+    if (data.user_id === process.env.FLUXER_BOT_ID) return; //user ID of the bot, stored in _SECRETS/.env
+
     //Find this message ID in our age_verification database
     //(if it does not exist, the message being reacted to isn't an age verification DM we sent out)
     const row = await db.prepare(`
@@ -195,8 +156,11 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
         Date.now(),
         data.message_id
     );
-
     console.log('Updated DB');
+
+    //Apply the appropriate role
+    console.log('Applying role');
+    applyRole(guild_id, { rest }, ageGroup, data.user_id);
 });
 
 //Log in

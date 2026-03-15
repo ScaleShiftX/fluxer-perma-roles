@@ -1,0 +1,30 @@
+{
+	id: '1475512878217941092',
+	name: '18+',
+	color: 6702560,
+	position: 5,
+	hoist_position: null,
+	permissions: '8933636165185',
+	hoist: false,
+	mentionable: false
+},
+{
+	id: '1482324436479746391',
+	name: 'A',
+	color: 526087,
+	position: 2,
+	hoist_position: null,
+	permissions: '137543142977',
+	hoist: false,
+	mentionable: false
+},
+{
+	id: '1482324559393837278',
+	name: 'B',
+	color: 526087,
+	position: 1,
+	hoist_position: null,
+	permissions: '137543142977',
+	hoist: false,
+	mentionable: false
+}
