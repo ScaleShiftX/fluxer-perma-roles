@@ -14,9 +14,10 @@ import {WebSocketManager} from '@discordjs/ws';
 import Database from "better-sqlite3";
 import dmSetup from './dm_setup.mjs';
 import applyRole from './apply_role.mjs';
+//import migrateDb from './_SECRETS/db/migrate.mjs';
 
 //Setup
-const guild_id = '1475505230441079387';
+const guild_id = '1475505230441079387'; //ScaleShift's server
 
 const token = process.env['FLUXER_BOT_TOKEN'];
 if (!token) {
@@ -35,12 +36,13 @@ const gateway = new WebSocketManager({
 const client = new Client({rest, gateway});
 
 //Database setup
-const db = new Database("roles.db");
+const db = new Database('./_SECRETS/db/roles.db');
+//migrateDb(db);
 
 db.exec(`
     CREATE TABLE IF NOT EXISTS age_verification (
-        age_verification_message_id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL UNIQUE,
+        age_verification_message_id TEXT,
+        user_id TEXT NOT NULL PRIMARY KEY,
         age_group_reported TEXT NOT NULL,
         reaction_timestamp INTEGER NOT NULL
     )

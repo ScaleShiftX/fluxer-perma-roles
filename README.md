@@ -9,6 +9,8 @@ You can invite the bot to your server with the URL in authorize_url.txt
 
 You will also have to populate the .env with FLUXER_BOT_TOKEN and FLUXER_BOT_ID
 
+For hosting, I recommend a very cheap/free tier of AWS EC2
+
 # Licence
 This bot is licensed with AGPL3.0, a copyleft license.
 
