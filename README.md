@@ -11,7 +11,15 @@ You will also have to populate the .env with FLUXER_BOT_TOKEN and FLUXER_BOT_ID
 
 For hosting, I recommend a very cheap/free tier of AWS EC2
 
-# Licence
-This bot is licensed with AGPL3.0, a copyleft license.
+# Commands
+.remove [userId]
+Removes that user from the database
+Available only to admins (hardcoded to just ScaleShift for now)
 
-This licence ensures that this remains open source regardless of modifications or through being provided via a SaaS.
+No other commands exist at the moment. I set the reaction message for my server manually and hardcoded its message ID.
+
+# Licence
+This repo is licensed with AGPL3.0, a copyleft license.  
+This licence ensures that this remains open source regardless of modifications or through being provided via a SaaS.  
+Additionally, the software is provided "as is" with no warranty, and the authors or contributors are not liable for any damages arising from its use.  
+All details are in the LICENSE file.
