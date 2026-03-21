@@ -1,4 +1,3 @@
-# fluxer-perma-roles
 Fluxer Roles which remain attached to users even after leaving and rejoining the server. Highly useful for moderation.
 
 # How to Clone
@@ -12,8 +11,8 @@ You will also have to populate the .env with FLUXER_BOT_TOKEN and FLUXER_BOT_ID
 For hosting, I recommend a very cheap/free tier of AWS EC2
 
 # Commands
-.remove [userId]
-Removes that user from the database
+`.remove [userId]`  
+Removes that user from the database  
 Available only to admins (hardcoded to just ScaleShift for now)
 
 No other commands exist at the moment. I set the reaction message for my server manually and hardcoded its message ID.
