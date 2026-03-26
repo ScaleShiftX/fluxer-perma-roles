@@ -8,8 +8,15 @@ export default async function applyRole(guild_id, { rest }, ageGroup, user_id) {
     };
     const roleId = roleMap[ageGroup];
 
+    //Check that they're actually in the server
+    const userLocationInServer = `/guilds/${guild_id}/members/${user_id}`;
+    try {
+        await rest.get(userLocationInServer);
+    } catch {
+        console.log('User not in guild, skipping role');
+        return;
+    }
+
     //Apply the role
-    await rest.put(
-        `/guilds/${guild_id}/members/${user_id}/roles/${roleId}`
-    );
+    await rest.put(userLocationInServer + `/roles/${roleId}`);
 }

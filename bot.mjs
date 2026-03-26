@@ -53,6 +53,8 @@ db.exec(`
 
 //Send a message to users when they join the server
 client.on(GatewayDispatchEvents.GuildMemberAdd, async ({ api, data }) => {
+    console.log(`A new user joined! ${data.user.username}`);
+
     //Apply the user's existing roles if they already exist in the database
     //Find this user ID in our age_verification database
     //(if it does not exist, the user has not yet setup)
@@ -99,7 +101,7 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
 });
 
 //Listen for reactions to the setup DM
-client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
+client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
     //Don't react to ourselves
     if (data.user_id === process.env.FLUXER_BOT_ID) return; //user ID of the bot, stored in _SECRETS/.env
 
@@ -169,7 +171,12 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
 
     //Send a welcome message in the general chat
     const generalChatChannelId = "1475505230441079390";
-    await api.channels.createMessage(generalChannelId, {
+    //await rest.post(`/channels/${generalChatChannelId}/messages`, {
+    //    body: {
+    //        content: `<@${data.user_id}> welcome to the server! 🎉`
+    //    }
+    //});
+    await api.channels.createMessage(generalChatChannelId, {
         content: `<@${data.user_id}> welcome to the server! 🎉`
     });
 });

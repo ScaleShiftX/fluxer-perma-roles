@@ -7,7 +7,7 @@ git pull origin main &&
 pm2 restart bot &&
 
 #Read logs
-pm2 logs bot --lines 1 --nostream
+pm2 logs bot --lines 8 --nostream
 '
 
 #Check if in SSH session

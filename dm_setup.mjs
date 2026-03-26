@@ -65,25 +65,79 @@ If you have any problems with the bot, please DM ScaleShift directly!`,
         }
 
         //Insert new DB row, without user selection for now
-        db.prepare(`
-            INSERT INTO age_verification (
-                age_verification_message_id,
+        //user_id is a PRIMARY KEY so each user can only exist once
+        //So if the user already exists, we can't do a simple INSERT
+        //Or we will crash
+        //As well, we have to keep in mind that we want roles to be perma
+        //So if the user has an age_group_reported, we should not overwrite
+
+        //Does the user already have an age_group_reported?
+        const existing = db.prepare(`
+            SELECT age_group_reported
+            FROM age_verification
+            WHERE user_id = ?
+        `).get(user_id);
+
+        if (!existing) {
+            //No row; insert fresh
+            db.prepare(`
+                INSERT OR REPLACE INTO age_verification (
+                    age_verification_message_id,
+                    user_id,
+                    age_group_reported,
+                    reaction_timestamp
+                )
+                VALUES (
+                    ?,
+                    ?,
+                    ?,
+                    ?
+                )
+            `).run(
+                messageAgeVerification.id,
                 user_id,
-                age_group_reported,
-                reaction_timestamp
-            )
-            VALUES (
-                ?,
-                ?,
-                ?,
-                ?
-            )
-        `).run(
-            messageAgeVerification.id,
-            user_id,
-            '',
-            0,
-        );
+                '',
+                0,
+            );
+        }
+        else if (existing.age_group_reported === '') {
+            //User exists but no age_group_reported (blank); update message ID
+            db.prepare(`
+                UPDATE age_verification
+                SET age_verification_message_id = ?
+                WHERE user_id = ?
+            `).run(
+                messageAgeVerification.id,
+                user_id
+            );
+        }
+        else {
+            //User already verified
+            console.log('User already verified; skipping DB insert');
+            api.channels.createMessage(dm.id, { content:
+                `You have already set your age group!`,
+            });
+        }
+
+        //db.prepare(`
+        //    INSERT OR REPLACE INTO age_verification (
+        //        age_verification_message_id,
+        //        user_id,
+        //        age_group_reported,
+        //        reaction_timestamp
+        //    )
+        //    VALUES (
+        //        ?,
+        //        ?,
+        //        ?,
+        //        ?
+        //    )
+        //`).run(
+        //    messageAgeVerification.id,
+        //    user_id,
+        //    '',
+        //    0,
+        //);
     } catch (err) {
         console.error(err);
     }
