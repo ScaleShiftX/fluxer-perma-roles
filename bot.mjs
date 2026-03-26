@@ -53,7 +53,7 @@ db.exec(`
 
 //Send a message to users when they join the server
 client.on(GatewayDispatchEvents.GuildMemberAdd, async ({ api, data }) => {
-    console.log(`A new user joined! ${data.user.username}`);
+    console.log(`A user joined! ${data.user.username} (ID: ${data.user.id})`);
 
     //Apply the user's existing roles if they already exist in the database
     //Find this user ID in our age_verification database
@@ -105,6 +105,8 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
     //Don't react to ourselves
     if (data.user_id === process.env.FLUXER_BOT_ID) return; //user ID of the bot, stored in _SECRETS/.env
 
+    //console.log("Someone reacted to one of our messages");
+
     //Find this message ID in our age_verification database
     //(if it does not exist, the message being reacted to isn't an age verification DM we sent out)
     const row = await db.prepare(`
@@ -119,7 +121,7 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
         return;
     }
     else {
-        console.log('age_verification row with matching message_id found; proceeding');
+        console.log('Someone reacted to one of our age verification messages! (age_verification row with matching message_id found)');
     }
 
     console.log("Row found:", row);
@@ -127,15 +129,15 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
     //Prevent sending multiple reactions, so users can't change their minds without admin approval
     //(For age verification, underage users might decide they want to lie later to access 18+ content)
     if (row.age_group_reported !== ''){
-        console.log('age_group_reported is not blank; returning');
+        console.log(`But this user has already reported an age group! We don't allow changing roles... (age_group_reported is not blank; returning)`);
         return;
     }
-    else {
-        console.log('age_group_reported is blank; proceeding');
-    }
+    //else {
+    //    console.log('age_group_reported is blank; proceeding');
+    //}
 
     //Insert into DB
-    console.log('Inserting into DB from message_id ' + data.message_id);
+    //console.log('Inserting into DB from message_id ' + data.message_id);
 
     //Map emoji → age group
     const ageMap = {
@@ -148,7 +150,7 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
 
     const ageGroup = ageMap[data.emoji.name];
     if (!ageGroup) {
-        console.log('Error parsing ageGroup from reaction');
+        console.log(`Error parsing ageGroup from reaction ${data.emoji.name}`);
         return;
     }
 
@@ -166,19 +168,25 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
     console.log('Updated DB');
 
     //Apply the appropriate role
-    console.log('Applying role');
+    console.log('Applying role...');
     applyRole(guild_id, { rest }, ageGroup, data.user_id);
 
-    //Send a welcome message in the general chat
-    const generalChatChannelId = "1475505230441079390";
-    //await rest.post(`/channels/${generalChatChannelId}/messages`, {
-    //    body: {
-    //        content: `<@${data.user_id}> welcome to the server! 🎉`
-    //    }
-    //});
-    await api.channels.createMessage(generalChatChannelId, {
-        content: `<@${data.user_id}> welcome to the server! 🎉`
-    });
+    //Send a welcome message in the general chat, if they're 18+
+    if (ageGroup == "18-22" || ageGroup == "23+") {
+        console.log("Sending a welcome message!");
+        const generalChatChannelId = "1475505230441079390";
+        await rest.post(`/channels/${generalChatChannelId}/messages`, {
+            body: {
+                content: `<@${data.user_id}> welcome to the server! 🎉`
+            }
+        });
+        //await api.channels.createMessage(generalChatChannelId, {
+        //    content: `<@${data.user_id}> welcome to the server! 🎉`
+        //});
+    }
+    else {
+        console.log("User is underage; not sending a welcome message.");
+    }
 });
 
 //Remove a user from the database (mostly for diagnostics)

@@ -19,4 +19,8 @@ export default async function applyRole(guild_id, { rest }, ageGroup, user_id) {
 
     //Apply the role
     await rest.put(userLocationInServer + `/roles/${roleId}`);
+
+    console.log(`Applied role ${roleId}`);
+    const role = await rest.get(`/guilds/${guild_id}/roles/${roleId}`);
+    console.log(`Applied role ${role.name}`);
 }
