@@ -18,15 +18,19 @@ Available only to admins (hardcoded to just ScaleShift for now)
 No other commands exist at the moment. I set the reaction message for my server manually and hardcoded its message ID.
 
 # Updates
-If you add any updates to the code, you can update the server with `fpr-deploy.sh`. By default, it looks for the environment variables in `_SSH/.env`, which for obvious security reasons I've excluded from the repo, so you'll have to add your own environment variables manually. Should look something like this:
+If you add any updates to the code, you can update the server with `fpr-deploy.sh`. Just make sure you've defined your server in your `.ssh/config`. For obvious security reasons I can't put my exact config in this repo so you'll have to define yours manually, but it should look something like this:
 ```
-fluxer-perma-roles/
-├── fpr-deploy.sh
-└── _SSH/
-    ├── .ssh/[SSH private key file]
-    └── .env (a text file)
-		├── REMOTE=ec2-user@[server ip]
-		└── KEY=.ssh/[SSH private key file]
+[Your home folder (ex: /c/Users/scale)]/.ssh
+├── [SSH private key file]
+└── config (a text file without a file type)
+```
+
+And `config` might have something like this inside:
+```
+Host ec2
+    HostName [server ip]
+    User ec2-user
+    IdentityFile ~/.ssh/[SSH private key file]
 ```
 
 # Licence

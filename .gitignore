@@ -1,6 +1,6 @@
 # Secrets
 _SECRETS
-_SSH
+.ssh
 
 # Logs
 logs

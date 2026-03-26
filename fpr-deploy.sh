@@ -1,12 +1,5 @@
 #For updating the EC2 server with the git repo
 
-#Environment variables
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" #Change directory to where the script is
-SSH_DIR_RELATIVE=_SSH #Next to the script is this folder which contains the SSH .env
-set -a
-source "$SCRIPT_DIR/$SSH_DIR_RELATIVE/.env"
-set +a
-
 COMMANDS='
 #Update from the git repo
 cd ~/fluxer-perma-roles &&
@@ -23,5 +16,5 @@ if [ -n "$SSH_CONNECTION" ]; then
 	eval "$COMMANDS"
 else
     echo "Not on EC2 - connecting via SSH..."
-    ssh -i "$SCRIPT_DIR/$SSH_DIR_RELATIVE/$KEY" "$REMOTE" "bash -c '$COMMANDS'"
+    ssh ec2 "bash -c '$COMMANDS'"
 fi
