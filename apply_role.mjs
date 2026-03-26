@@ -21,6 +21,16 @@ export default async function applyRole(guild_id, { rest }, ageGroup, user_id) {
     await rest.put(userLocationInServer + `/roles/${roleId}`);
 
     console.log(`Applied role ${roleId}`);
-    const role = await rest.get(`/guilds/${guild_id}/roles/${roleId}`);
-    console.log(`Applied role ${role.name}`);
+    //const role = await rest.get(`/guilds/${guild_id}/roles/${roleId}`);
+    const rolesAll = await rest.get(`/guilds/${guild_id}/roles`);
+    console.log(`All roles in this guild: ${rolesAll}`);
+    
+    const roleApplied = rolesAll.find(role => role.id === roleId);
+    if (roleApplied) {
+        console.log(`Applied role: ${roleApplied.name} (${roleApplied.id})`);
+    } else {
+        console.log(`Applied role ID ${roleId}, but couldn't find name`);
+    }
+
+    //https://docs.fluxer.app/api-reference/guilds/list-guild-roles?playground=open
 }

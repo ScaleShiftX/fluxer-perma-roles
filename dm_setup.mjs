@@ -64,7 +64,7 @@ If you have any problems with the bot, please DM ScaleShift directly!`,
             console.error('Reaction failed:', err);
         }
 
-        console.log(`DM sent and reactions added. Channel ID: ${messageAgeVerification.channel_id}`);
+        console.log(`DM sent and reactions added. Channel ID: ${messageAgeVerification.channel_id}. Message ID: ${messageAgeVerification.id}`);
 
         //Insert new DB row, without user selection for now
         //user_id is a PRIMARY KEY so each user can only exist once
