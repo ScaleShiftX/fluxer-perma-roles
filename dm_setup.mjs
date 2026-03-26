@@ -1,7 +1,7 @@
 export default async function dmSetup({ api, rest, db }, user_id) {
     //DM the reacting user
     try {
-        console.log('dmSetup is now trying to get the DM channel ID');
+        //console.log('dmSetup is now trying to get the DM channel ID');
 
         //Get DM channel
         const dm = await rest.post('/users/@me/channels', {
@@ -63,6 +63,8 @@ If you have any problems with the bot, please DM ScaleShift directly!`,
         } catch (err) {
             console.error('Reaction failed:', err);
         }
+
+        console.log(`DM sent and reactions added. Channel ID: ${messageAgeVerification.channel_id}`);
 
         //Insert new DB row, without user selection for now
         //user_id is a PRIMARY KEY so each user can only exist once
