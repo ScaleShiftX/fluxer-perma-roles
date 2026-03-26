@@ -166,6 +166,12 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ data }) => {
     //Apply the appropriate role
     console.log('Applying role');
     applyRole(guild_id, { rest }, ageGroup, data.user_id);
+
+    //Send a welcome message in the general chat
+    const generalChatChannelId = "1475505230441079390";
+    await api.channels.createMessage(generalChannelId, {
+        content: `<@${data.user_id}> welcome to the server! 🎉`
+    });
 });
 
 //Remove a user from the database (mostly for diagnostics)
