@@ -18,7 +18,7 @@ Available only to admins (hardcoded to just ScaleShift for now)
 No other commands exist at the moment. I set the reaction message for my server manually and hardcoded its message ID.
 
 # Updates
-If you add any updates to the code, you can update the server with `fpr-deploy.sh`. Just make sure you've defined your server in your `.ssh/config`. For obvious security reasons I can't put my exact config in this repo so you'll have to define yours manually, but it should look something like this:
+If you add any updates to the code, you can update the server with `fpr-deploy.sh`. Just make sure you've defined your server in your `.ssh/config`. For obvious security reasons I can't put my exact config in this repo so you'll have to define yours manually, but it should look something like this (replace the objects in brackets with your information):
 ```
 [Your home folder (ex: /c/Users/scale)]/.ssh
 ├── [SSH private key file]
