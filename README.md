@@ -19,6 +19,7 @@ No other commands exist at the moment. I set the reaction message for my server 
 
 # Updates
 If you add any updates to the code, you can update the server with `fpr-deploy.sh`. By default, it looks for the environment variables in `_SSH/.env`, which for obvious security reasons I've excluded from the repo, so you'll have to add your own environment variables manually. Should look something like this:
+```
 fluxer-perma-roles/
 ├── fpr-deploy.sh
 └── _SSH/
@@ -26,6 +27,7 @@ fluxer-perma-roles/
     └── .env (a text file)
 		├── REMOTE=ec2-user@[server ip]
 		└── KEY=.ssh/[SSH private key file]
+```
 
 # Licence
 This repo is licensed with AGPL3.0, a copyleft license.  
