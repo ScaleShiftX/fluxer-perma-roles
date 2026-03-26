@@ -17,6 +17,7 @@ import {WebSocketManager} from '@discordjs/ws';
 import Database from "better-sqlite3";
 import dmSetup from './dm_setup.mjs';
 import applyRole from './apply_role.mjs';
+import getWelcomeMessage from './getWelcomeMessage.mjs';
 //import migrateDb from './_SECRETS/db/migrate.mjs';
 
 //Setup
@@ -174,10 +175,14 @@ client.on(GatewayDispatchEvents.MessageReactionAdd, async ({ api, data }) => {
     //Send a welcome message in the general chat, if they're 18+
     if (ageGroup == "18-22" || ageGroup == "23+") {
         console.log("Sending a welcome message!");
+
         const generalChatChannelId = "1475505230441079390";
+
+        const welcomeMessage = getWelcomeMessage(data.user_id);
+
         await rest.post(`/channels/${generalChatChannelId}/messages`, {
             body: {
-                content: `<@${data.user_id}> welcome to the server! 🎉`
+                content: welcomeMessage
             }
         });
         //await api.channels.createMessage(generalChatChannelId, {
