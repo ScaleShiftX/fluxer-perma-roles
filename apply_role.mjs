@@ -23,7 +23,7 @@ export default async function applyRole(guild_id, { rest }, ageGroup, user_id) {
     console.log(`Applied role ${roleId}`);
     //const role = await rest.get(`/guilds/${guild_id}/roles/${roleId}`);
     const rolesAll = await rest.get(`/guilds/${guild_id}/roles`);
-    console.log(`All roles in this guild: ${rolesAll}`);
+    //console.log("All roles in this guild:\n", JSON.stringify(rolesAll, null, 2));
     
     const roleApplied = rolesAll.find(role => role.id === roleId);
     if (roleApplied) {
